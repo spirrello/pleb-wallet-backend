@@ -4,6 +4,9 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const usersRouter = require("./routers/usersRouter");
 const lightningRouter = require("./routers/lightningRouter");
@@ -34,8 +37,6 @@ server.get("/health", (req, res) => {
 server.use("/users", usersRouter);
 server.use("/lightning", lightningRouter);
 
-// Set the server to listen on the provided port, or 5500 if no port is specified
-const PORT = process.env.PORT || 8080;
 
 server.use('/things', function (req, res, next) {
     console.log("A request for things received at " + Date.now());
@@ -58,6 +59,7 @@ server.use('/things', function (req, res,) {
     res.send('Things');
 });
 
+const PORT = process.env.PORT || 8089;
 server.listen(PORT, () => {
     // Log a message to the console when the server starts listening
     console.log(`Server listening on port ${PORT}`);

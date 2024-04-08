@@ -9,12 +9,29 @@ router.get("/", (req, res) => {
 });
 
 router.post("/login", (req, res) => {
-    const { id, password } = req.body;
+    const { username, password } = req.body;
 
+    const UserCreds = {
+        username: "test",
+        password: "pass1",
+    };
+    // Hash the password from the request body using bcrypt
+    // Later we will compare this hash to the hash stored in the database
+    // But for now, we will just do it manually
+    const hashedPassword = bcrypt.hashSync(UserCreds.password, 14);
 
-    console.log(id, password);
+    if (UserCreds && bcrypt.compareSync(password, hashedPassword)) {
+        const token = generateToken(UserCreds);
 
-    res.status(200).json({ message: "users!" });
+        res.status(200).json({
+            messsage: `Welcome ${UserCreds.username}!`, token
+        });
+    } else {
+        res.status(401).json({
+            message: "Invalid credentials"
+        });
+    }
+
 });
 
 
