@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const dotenv = require("dotenv");
+const { connect } = require("./lnd");
 
 dotenv.config();
 
@@ -25,7 +26,8 @@ server.use(
     }));
 // Use the built-in JSON middleware to parse incoming JSON requests
 server.use(express.json())
-
+// Connec to LND nocde
+connect();
 // Set up a route to handle GET requests to the root path
 server.get("/health", (req, res) => {
     // Send a JSON response with a "message" property set to "I'm alive!"
