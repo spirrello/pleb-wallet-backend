@@ -19,6 +19,8 @@ const connect = async () => {
         }
 
         console.log(`LND gRPC connection state: ${lnd.state}`);
+
+        invoiceEventStream();
     } catch (e) {
         console.log("error", e);
     }
@@ -35,5 +37,43 @@ const getChannelBalance = async () => {
     return channelBalance;
 };
 
+const createInvoice = async ({ value, memo }) => {
+    const invoice = await lnd.services.Lightning.addInvoice({
+        value: value,
+        memo: memo
+    });
+    // Save invoice to DB
+    return invoice;
+};
 
-module.exports = { connect, getBalance, getChannelBalance };
+const payInvoice = async ({ payment_request }) => {
+    const paidInvoice = await lnd.services.Lightning.sendPaymentSync({
+        payment_request: payment_request
+    });
+
+    return paidInvoice;
+}
+
+const invoiceEventStream = async () => {
+    await lnd.services.Lightning.subscribeInvoices({
+        add_index: 0,
+        settle_index: 0
+    }).on("data", async (data) => {
+        if (data.settled) {
+            // Check if the invoice exists in the database
+            const existingInvoice = False;
+
+            // If the invoice exists, update it in the database
+            if (existingInvoice) {
+                // update db
+            } else {
+                console.log("Invoice not found in the database");
+            }
+        }
+    }).on("error", (err) => {
+        console.log(err);
+    });
+}
+
+
+module.exports = { connect, getBalance, getChannelBalance, createInvoice, payInvoice, invoiceEventStream };

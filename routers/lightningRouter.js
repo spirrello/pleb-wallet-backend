@@ -2,13 +2,30 @@ const router = require('express').Router();
 const authenticate = require("../routers/middleware/authenticate");
 const authenticateAdmin = require("../routers/middleware/authenticateAdmin");
 
+const {
+    getBalance,
+    createInvoice,
+    getChannelBalance,
+    payInvoice,
+} = require("../lnd.js");
+
 router.get("/balance", (req, res) => {
-    res.status(200).json({
-        message: "I'm alive"
+    getBalance().then((balance) => {
+        res.status(200).json(balance);
+    }).catch((err) => {
+        res.status(500).json(err);
     });
 });
 
-router.get("/invoices", (req, res) => {
+router.get("/channelbalance", (req, res) => {
+    getChannelBalance().then((channelBalance) => {
+        res.status(200).json(channelBalance);
+    }).catch((err) => {
+        res.status(500).json(err);
+    });
+});
+
+router.get("/invoices", (req, rescv) => {
     res.status(200).json({
         message: "I'm alive"
     });
@@ -18,18 +35,33 @@ router.get("/invoices", (req, res) => {
 router.post("/invoice", authenticate, (req, res) => {
     const { value, memo } = req.body;
 
-    console.log(value, memo);
+    createInvoice({
+        value, memo
+    }).then((invoice) => {
+        res.status(200).json(invoice);
+    }).catch((err) => {
+        res.status(500).json(err);
+    });
 
-    res.status(200).json({ message: "I'm alive" });
-})
+});
 
 // Pay an invoice
-router.post("/pay", authenticateAdmin, (req, res) => {
+router.post("/pay", authenticateAdmin, async (req, res) => {
     const { payment_request } = req.body;
 
-    console.log(payment_request);
+    const pay = await payInvoice({
+        payment_request
+    });
 
-    res.status(200).json({ message: "I'm alive" });
+    if (pay.payment_error) {
+        res.status(500).json(pay.payment_error);
+    };
+
+    if (pay?.payment_route) {
+        // Save to DB
+
+        res.status(200).json(pay);
+    };
 });
 
 module.exports = router;
